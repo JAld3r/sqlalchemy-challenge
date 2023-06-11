@@ -68,7 +68,7 @@ def precipitation():
 
     data = [{"date":row[0], "prcp":row[1]} for row in yr1_data_prec]
     json_data = json.dumps(data)
-
+    return jsonify(json_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
