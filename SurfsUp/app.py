@@ -48,7 +48,7 @@ def welcome():
     return (
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
-        # f"/api/v1.0/stations<br/>"
+        f"/api/v1.0/stations<br/>"
         # f"/api/v1.0/tobs<br/>"
         # f"/api/v1.0/summary"
     )
@@ -66,21 +66,27 @@ def precipitation():
 
     session.close()
 
-    data = [{"date":row[0], "prcp":row[1]} for row in yr1_data_prec]
-    json_data = json.dumps(data)
-    return jsonify(json_data)
+    data = {date:prcp for date, prcp in yr1_data_prec}
+    # json_data = json.dumps(data)
+    return jsonify(data)
 
-if __name__ == '__main__':
-    app.run(debug=True)
 
-# precp_data = []
-# for date, prcp in precp_data:
-#     precp_dict = {}
-#     precp_dict["date"] = Date
 
-# /api/v1.0/stations
+
+
 # Return a JSON list of stations from the dataset.
+@app.route("/api/v1.0/stations")
+def stations():
 
+    session = Session(engine)
+
+    station_list = engine.execute(text("""SELECT DISTINCT station FROM measurement"""))
+
+    session.close()
+
+    station_data = {station[0]: None for station in station_list}
+
+    return jsonify(station_data)
 
 
 # /api/v1.0/tobs
@@ -93,3 +99,8 @@ if __name__ == '__main__':
 # Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature for a specified start or start-end range.
 # For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date.
 # For a specified start date and end date, calculate TMIN, TAVG, and TMAX for the dates from the start date to the end date, inclusive.
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
