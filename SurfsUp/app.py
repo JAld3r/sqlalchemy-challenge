@@ -68,12 +68,8 @@ def precipitation():
     session.close()
 
     data = {date:prcp for date, prcp in yr1_data_prec}
-    # json_data = json.dumps(data)
+    
     return jsonify(data)
-
-
-
-
 
 # Return a JSON list of stations from the dataset.
 @app.route("/api/v1.0/stations")
@@ -88,7 +84,6 @@ def stations():
     station_data = {station[0]: None for station in station_list}
 
     return jsonify(station_data)
-
 
 # /api/v1.0/tobs
 # Query the dates and temperature observations of the most-active station for the previous year of data.
@@ -106,8 +101,6 @@ def active_station():
 
     return jsonify(station1_data)
 
-
-
 # /api/v1.0/<start> and /api/v1.0/<start>/<end>
 # Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature for a specified start or start-end range.
 # For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date.
@@ -118,18 +111,18 @@ def active_station():
 def temps(start=None, end=None):
 
     session = Session(engine)
-    """Return TMIN, TAVG, and TMAX"""
+    # function to return summary info
     sel = [func.min(measure.tobs), func.avg(measure.tobs), func.max(measure.tobs)]
 
     if not end:
-        # calculate the TMIN, TAVG, and TMAX for dates greater than and equal to the start date
+        # calculate summary info for dates greater than and equal to the start date
         results = session.query(*sel).\
             filter(measure.date >= start).all()
         # unpack the results as a list
         temps = list(np.ravel(results))
         return jsonify(temps)
 
-    # calculate the TMIN, TAVG, and TMAX for dates between the start and end date inclusive
+    # calculate summary info for dates between the start and end date
     results = session.query(*sel).\
         filter(measure.date >= start).\
         filter(measure.date <= end).all()
