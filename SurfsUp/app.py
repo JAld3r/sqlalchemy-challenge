@@ -49,8 +49,9 @@ def welcome():
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
-        # f"/api/v1.0/tobs<br/>"
-        # f"/api/v1.0/summary"
+        f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/<start><br/>"
+        f"/api/v1.0/<start>/<end>"
     )
 
 
@@ -92,6 +93,18 @@ def stations():
 # /api/v1.0/tobs
 # Query the dates and temperature observations of the most-active station for the previous year of data.
 # Return a JSON list of temperature observations for the previous year.
+@app.route("/api/v1.0/tobs")
+def active_station():
+
+    session = Session(engine)
+
+    station1 = engine.execute(text("""SELECT date, tobs FROM measurement WHERE date BETWEEN '2016-08-23' AND '2017-08-23' AND station = 'USC00519281' """))
+
+    session.close()
+
+    station1_data = {date:tobs for date, tobs in station1}
+
+    return jsonify(station1_data)
 
 
 
@@ -100,7 +113,29 @@ def stations():
 # For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date.
 # For a specified start date and end date, calculate TMIN, TAVG, and TMAX for the dates from the start date to the end date, inclusive.
 
+@app.route("/api/v1.0/<start>")
+@app.route("/api/v1.0/<start>/<end>")
+def temps(start=None, end=None):
 
+    session = Session(engine)
+    """Return TMIN, TAVG, and TMAX"""
+    sel = [func.min(measure.tobs), func.avg(measure.tobs), func.max(measure.tobs)]
+
+    if not end:
+        # calculate the TMIN, TAVG, and TMAX for dates greater than and equal to the start date
+        results = session.query(*sel).\
+            filter(measure.date >= start).all()
+        # unpack the results as a list
+        temps = list(np.ravel(results))
+        return jsonify(temps)
+
+    # calculate the TMIN, TAVG, and TMAX for dates between the start and end date inclusive
+    results = session.query(*sel).\
+        filter(measure.date >= start).\
+        filter(measure.date <= end).all()
+    # unpack the results as a list
+    temps = list(np.ravel(results))
+    return jsonify(temps)
 
 if __name__ == '__main__':
     app.run(debug=True)
